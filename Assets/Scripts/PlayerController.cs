@@ -4,48 +4,47 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    //Third Person Controller References
+    // Аніматор персонажа
     [SerializeField]
     private Animator playerAnim;
 
-
-    //Equip-Unequip parameters
+    // Посилання на меч у руках та на плечі
     [SerializeField]
     private GameObject sword;
     [SerializeField]
     private GameObject swordOnShoulder;
+
+    // Стан екіпірування
     public bool isEquipping;
     public bool isEquipped;
 
-
-    //Blocking Parameters
+    // Стан блокування, кікання, атаки
     public bool isBlocking;
-
-    //Kick Parameters
     public bool isKicking;
-
-    //Attack Parameters
     public bool isAttacking;
+
+    // Час з моменту останньої атаки
     private float timeSinceAttack;
+
+    // Поточна атака в комбінації (1, 2, 3)
     public int currentAttack = 0;
-
-
-
 
     private void Update()
     {
+        // Оновлення таймера атаки
         timeSinceAttack += Time.deltaTime;
 
+        // Обробка дій гравця
         Attack();
-
-
         Equip();
         Block();
         Kick();
     }
 
+    // Метод екіпірування / зняття зброї
     private void Equip()
     {
+        // При натисканні R і якщо гравець на землі
         if (Input.GetKeyDown(KeyCode.R) && playerAnim.GetBool("Grounded"))
         {
             isEquipping = true;
@@ -53,29 +52,33 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // Метод викликається анімаційним івентом для увімкнення / вимкнення зброї
     public void ActiveWeapon()
     {
         if (!isEquipped)
         {
             sword.SetActive(true);
             swordOnShoulder.SetActive(false);
-            isEquipped = !isEquipped;
+            isEquipped = true;
         }
         else
         {
             sword.SetActive(false);
             swordOnShoulder.SetActive(true);
-            isEquipped = !isEquipped;
+            isEquipped = false;
         }
     }
 
+    // Метод викликається після завершення анімації екіпірування
     public void Equipped()
     {
         isEquipping = false;
     }
 
+    // Обробка блокування
     private void Block()
     {
+        // Якщо натиснуто ПКМ і гравець на землі
         if (Input.GetKey(KeyCode.Mouse1) && playerAnim.GetBool("Grounded"))
         {
             playerAnim.SetBool("Block", true);
@@ -88,6 +91,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // Обробка удару ногою (кік)
     public void Kick()
     {
         if (Input.GetKey(KeyCode.LeftControl) && playerAnim.GetBool("Grounded"))
@@ -102,9 +106,10 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // Обробка атаки мечем
     private void Attack()
     {
-
+        // Якщо ЛКМ натиснуто, гравець на землі, і пройшло достатньо часу з останньої атаки
         if (Input.GetMouseButtonDown(0) && playerAnim.GetBool("Grounded") && timeSinceAttack > 0.8f)
         {
             if (!isEquipped)
@@ -113,29 +118,25 @@ public class PlayerController : MonoBehaviour
             currentAttack++;
             isAttacking = true;
 
+            // Обмеження кількості атак у комбінації (до 3)
             if (currentAttack > 3)
                 currentAttack = 1;
 
-            //Reset
+            // Скидання комбінації, якщо атака затрималась
             if (timeSinceAttack > 1.0f)
                 currentAttack = 1;
 
-            //Call Attack Triggers
+            // Відправка тригера атаки в Animator
             playerAnim.SetTrigger("Attack" + currentAttack);
 
-            //Reset Timer
+            // Скидання таймера
             timeSinceAttack = 0;
         }
-
-
-
-
-
     }
 
-    //This will be used at animation event
+    // Викликається після завершення анімації атаки
     public void ResetAttack()
     {
         isAttacking = false;
-    } 
-}   
+    }
+}
